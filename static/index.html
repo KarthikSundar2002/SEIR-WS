@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<html>
+<head>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+  <script src='https://cdn.plot.ly/plotly-2.4.2.min.js'></script>
+  <script language="javascript" type="text/javascript">
+    $(function() {
+      var conn = null;
+      function connect() {
+        disconnect();
+        var wsUri = (window.location.protocol=='https:'&&'wss://'||'ws://')+window.location.host + '/ws/';
+        conn = new WebSocket(wsUri);
+        conn.onopen = function() {
+          update_ui();
+        };
+        conn.onmessage = function(e) {
+          let mydata = JSON.parse(e.data);
+          let S = {
+            x: Object.keys(mydata),
+            y: Object.values(mydata).map(function (v, i) {return v[0]}),
+            type: 'scatter'
+          }
+          let E = {
+            x: Object.keys(mydata),
+            y: Object.values(mydata).map(function (v, i) {return v[1]}),
+            type: 'scatter'
+          }
+          let I = {
+            x: Object.keys(mydata),
+            y: Object.values(mydata).map(function (v, i) {return v[2]}),
+            type: 'scatter'
+          }
+          let R = {
+            x: Object.keys(mydata),
+            y: Object.values(mydata).map(function (v, i) {return v[3]}),
+            type: 'scatter'
+          }
+          //console.log(S["y"], E["y"]);
+          var lolz  = [S, E, I, R];
+          Plotly.newPlot('GraphDiv', lolz);
+        };
+        conn.onclose = function() {
+          conn = null;
+          update_ui();
+        };
+      }
+      function disconnect() {
+        if (conn != null) {
+          conn.close();
+          conn = null;
+          update_ui();
+        }
+      }
+      function update_ui() {
+        if (conn == null) {
+          $('#status').text('disconnected');
+          $('#connect').html('Connect');
+        } else {
+          $('#status').text('connected (' + conn.protocol + ')');
+          $('#connect').html('Disconnect');
+        }
+      }
+      $('#connect').click(function() {
+        if (conn == null) {
+          connect();
+        } else {
+          disconnect();
+        }
+        update_ui();
+        return false;
+      });
+      $('#send').click(function() {
+        let Seir = {
+          initial_state: {
+            initial_susceptible: parseFloat($('#s0').val()),
+            initial_exposed: parseFloat($('#e0').val()),
+            initial_infectious: parseFloat($('#i0').val()),
+            initial_removed: parseFloat($('#r0').val())
+          },
+          model_params: {
+            recovery_rate: parseFloat($('#RR').val()),
+            reproduction_number: parseFloat($('#RN').val()),
+            infection_rate: parseFloat($('#IR').val())
+          },
+          duration: parseFloat($('#T').val())
+        };
+        var text = JSON.stringify(Seir);
+        console.log(text);
+        conn.send(text);
+        return false;
+      });
+    });
+</script>
+</head>
+<body>
+<h3>SEIR</h3>
+<div>
+  <button id="connect">Connect</button>&nbsp;|&nbsp;Status:
+  <span id="status">disconnected</span>
+</div>
+<form id="chatform" onsubmit="return false;">
+  <p>S0: <input id="s0" type="number" /></p>
+  <p>E0: <input id="e0" type="number" /></p>
+  <p>I0: <input id="i0" type="number" /></p>
+  <p>R0: <input id="r0" type="number" /></p>
+  <p>RR: <input id="RR" type="number" /></p>
+  <p>RN: <input id="RN" type="number" /></p>
+  <p>IR: <input id="IR" type="number" /></p>
+  <p>T: <input id="T" type="number" /></p>
+  <input id="send" type="button" value="Send" />
+</form>
+<div id="GraphDiv"></div>
+</body>
+</html>

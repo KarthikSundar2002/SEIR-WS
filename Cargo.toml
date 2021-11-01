@@ -1,0 +1,21 @@
+[package]
+name = "OutbreakPoc"
+version = "0.1.0"
+authors = ["Shreyas K <shreyaskumar1035@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "websocket-server"
+path = "src/main.rs"
+
+[dependencies]
+ode_solvers = "0.3.4"
+actix = "0.10"
+actix-codec = "0.3"
+actix-web = "3"
+actix-web-actors = "3"
+actix-files = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
